@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Finance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9ff;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Financial Dashboard</h1>
+            <p class="text-gray-600">Track, analyze, and improve your finances</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-blue-100 p-6 rounded-xl shadow-sm slide-up">
+                <h3 class="text-blue-800 font-semibold">Total Expense</h3>
+                <p class="text-2xl font-bold text-blue-900" id="totalExpense">$0</p>
+            </div>
+            <div class="bg-green-100 p-6 rounded-xl shadow-sm slide-up">
+                <h3 class="text-green-800 font-semibold">Total Income</h3>
+                <p class="text-2xl font-bold text-green-900" id="totalIncome">$0</p>
+            </div>
+            <div class="bg-purple-100 p-6 rounded-xl shadow-sm slide-up">
+                <h3 class="text-purple-800 font-semibold">Total Invested</h3>
+                <p class="text-2xl font-bold text-purple-900" id="totalInvested">$0</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <button onclick="getAIInsights()" class="bg-indigo-500 text-white p-4 rounded-xl hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2">
+                <i class="bi bi-lightbulb"></i>
+                Get AI Insights
+            </button>
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <h3 class="font-semibold mb-2">Current Month Transactions</h3>
+                <div class="text-gray-600" id="currentMonthSummary">No transactions yet</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div id="insightsContainer" class="grid grid-cols-1 gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-semibold mb-4">Quantitative Insights</h3>
+                    <div id="quantitativeInsights" class="text-gray-600">Request AI insights to view analysis</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-semibold mb-4">Improvement Suggestions</h3>
+                    <div id="improvementSuggestions" class="text-gray-600">Request AI insights to view suggestions</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-semibold mb-4">Key Focus Areas</h3>
+                    <div id="keyFocusAreas" class="text-gray-600">Request AI insights to view focus areas</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-semibold mb-4">Detailed Insights</h3>
+                    <div id="detailedInsights" class="text-gray-600">Request AI insights to view detailed analysis</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+            <h3 class="font-semibold mb-4">Transaction History</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="pb-3">Date</th>
+                            <th class="pb-3">Type</th>
+                            <th class="pb-3">Category</th>
+                            <th class="pb-3">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTable">
+                        <tr><td colspan="4" class="py-4 text-center text-gray-500">No transactions recorded</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="showTransactionModal('income')" class="bg-green-500 text-white p-4 rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+                <i class="bi bi-plus-circle"></i>
+                Add New Income
+            </button>
+            <button onclick="showTransactionModal('expense')" class="bg-red-500 text-white p-4 rounded-xl hover:bg-red-600 transition-colors flex items-center justify-center gap-2">
+                <i class="bi bi-dash-circle"></i>
+                Add New Expense
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="transactionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white p-6 rounded-xl w-full max-w-md mx-4 slide-up">
+            <h3 class="text-xl font-semibold mb-4" id="modalTitle">Add Transaction</h3>
+            <form id="transactionForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Amount</label>
+                    <input type="number" id="amount" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Category</label>
+                    <select id="category" class="w-full p-2 border rounded" required>
+                        <option value="">Select category</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Date</label>
+                    <input type="date" id="date" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let transactions = [];
+        const incomeCategories = ['Salary', 'Freelance', 'Investments', 'Other'];
+        const expenseCategories = ['Food', 'Transport', 'Housing', 'Entertainment', 'Shopping'];
+
+        function showTransactionModal(type) {
+            const modal = document.getElementById('transactionModal');
+            const categorySelect = document.getElementById('category');
+            const modalTitle = document.getElementById('modalTitle');
+
+            modalTitle.textContent = type === 'income' ? 'Add Income' : 'Add Expense';
+            categorySelect.innerHTML = '';
+            
+            const categories = type === 'income' ? incomeCategories : expenseCategories;
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+
+            modal.style.display = 'flex';
+            document.getElementById('transactionForm').onsubmit = (e) => {
+                e.preventDefault();
+                addTransaction(type);
+            };
+        }
+
+        function closeModal() {
+            document.getElementById('transactionModal').style.display = 'none';
+        }
+
+        function addTransaction(type) {
+            const amount = document.getElementById('amount').value;
+            const category = document.getElementById('category').value;
+            const date = document.getElementById('date').value;
+
+            const transaction = {
+                type,
+                amount: parseFloat(amount),
+                category,
+                date
+            };
+
+            transactions.push(transaction);
+            updateDashboard();
+            closeModal();
+            document.getElementById('transactionForm').reset();
+        }
+
+        function updateDashboard() {
+            const totalExpense = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const totalIncome = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            document.getElementById('totalExpense').textContent = `$${totalExpense.toFixed(2)}`;
+            document.getElementById('totalIncome').textContent = `$${totalIncome.toFixed(2)}`;
+            
+            updateTransactionTable();
+        }
+
+        function updateTransactionTable() {
+            const tableBody = document.getElementById('transactionTable');
+            if (transactions.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-500">No transactions recorded</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = transactions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map(t => `
+                    <tr class="border-b">
+                        <td class="py-3">${new Date(t.date).toLocaleDateString()}</td>
+                        <td class="py-3 ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">${t.type}</td>
+                        <td class="py-3">${t.category}</td>
+                        <td class="py-3">$${t.amount.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+        }
+
+        async function getAIInsights() {
+            const loadingMessage = '<div class="loading">Analyzing your financial data...</div>';
+            document.getElementById('quantitativeInsights').innerHTML = loadingMessage;
+            document.getElementById('improvementSuggestions').innerHTML = loadingMessage;
+            document.getElementById('keyFocusAreas').innerHTML = loadingMessage;
+            document.getElementById('detailedInsights').innerHTML = loadingMessage;
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/ai', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer Aooo7Xj609N9fF0yvW82JiJN0vj2',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [{
+                            role: "user",
+                            content: [{
+                                type: "text",
+                                text: `Analyze these transactions and provide insights: ${JSON.stringify(transactions)}`
+                            }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const insights = data.message;
+
+                // Update insights sections with AI response
+                document.getElementById('quantitativeInsights').innerHTML = insights;
+                document.getElementById('improvementSuggestions').innerHTML = insights;
+                document.getElementById('keyFocusAreas').innerHTML = insights;
+                document.getElementById('detailedInsights').innerHTML = insights;
+            } catch (error) {
+                console.error('Error getting AI insights:', error);
+                const errorMessage = 'Failed to get AI insights. Please try again later.';
+                document.getElementById('quantitativeInsights').innerHTML = errorMessage;
+                document.getElementById('improvementSuggestions').innerHTML = errorMessage;
+                document.getElementById('keyFocusAreas').innerHTML = errorMessage;
+                document.getElementById('detailedInsights').innerHTML = errorMessage;
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = (event) => {
+            const modal = document.getElementById('transactionModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
